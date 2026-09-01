@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>山口さん 議事録アーカイブ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Noto Sans JP', system-ui, sans-serif; background: #F7F8FA; color: #1f2430; }
+  a { color: #1E3A8A; }
+
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #1B2333; color: #E5E9F0;
+    padding: 28px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-header { padding: 0 22px 20px; border-bottom: 1px solid #2E3A52; margin-bottom: 12px; }
+  .sidebar-header .client { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #8A93A8; margin-bottom: 4px; }
+  .sidebar-header .title { font-size: 17px; font-weight: 900; line-height: 1.5; color: #fff; }
+
+  .meeting-list { list-style: none; margin: 0; padding: 0; }
+  .meeting-item { padding: 14px 22px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.15s; }
+  .meeting-item:hover { background: #232C40; }
+  .meeting-item.active { background: #232C40; border-left-color: #C2410C; }
+  .meeting-item .date { font-size: 15px; font-weight: 900; color: #fff; }
+  .meeting-item .subject { font-size: 12px; color: #9AA4B8; margin-top: 4px; line-height: 1.5; }
+
+  .main { flex: 1; min-width: 0; padding: 44px 48px 80px; max-width: 880px; }
+
+  .doc-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #1E3A8A; }
+  .doc-header .meeting-name { font-size: 24px; font-weight: 900; color: #111318; line-height: 1.5; margin-bottom: 14px; }
+  .doc-meta { display: flex; gap: 28px; flex-wrap: wrap; font-size: 13px; color: #5b6472; }
+  .doc-meta dt { font-weight: 700; color: #1E3A8A; display: inline; margin-right: 6px; }
+  .doc-meta dd { display: inline; margin: 0; }
+
+  .section-title { font-size: 13px; font-weight: 900; letter-spacing: 0.1em; color: #C2410C; margin: 40px 0 18px; padding-bottom: 8px; border-bottom: 1px solid #E2E5EA; }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .decision-card { background: #fff; border: 1px solid #E2E5EA; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; }
+  .decision-card h3 { font-size: 15.5px; font-weight: 900; color: #111318; margin: 0 0 10px; line-height: 1.6; }
+  .decision-card p { font-size: 14.5px; line-height: 1.9; color: #333a44; margin: 0 0 10px; }
+  .decision-card p:last-child { margin-bottom: 0; }
+  .decision-card .why { background: #F5F7FA; border-radius: 6px; padding: 12px 16px; font-size: 13.5px; color: #4a5262; line-height: 1.8; }
+  .decision-card .why b { color: #1E3A8A; }
+
+  table.actions { width: 100%; border-collapse: collapse; font-size: 13.5px; background: #fff; border: 1px solid #E2E5EA; border-radius: 8px; overflow: hidden; }
+  table.actions th { background: #1E3A8A; color: #fff; font-weight: 700; text-align: left; padding: 10px 12px; }
+  table.actions td { padding: 12px; border-top: 1px solid #E2E5EA; vertical-align: top; line-height: 1.7; }
+  table.actions tr:nth-child(even) td { background: #FAFBFC; }
+  .owner-piyo { color: #1E3A8A; font-weight: 700; }
+  .owner-kataoka { color: #C2410C; font-weight: 700; }
+  .col-no { width: 34px; color: #9aa4b8; }
+  .col-owner { width: 90px; white-space: nowrap; }
+  .col-deadline { width: 84px; white-space: nowrap; color: #8A93A8; }
+
+  .empty-state { padding: 80px 20px; text-align: center; color: #9aa4b8; }
+
+  @media (max-width: 780px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; padding: 18px 0; }
+    .meeting-list { display: flex; overflow-x: auto; padding: 0 14px; gap: 8px; }
+    .meeting-item { border-left: none; border-bottom: 3px solid transparent; flex-shrink: 0; white-space: nowrap; padding: 10px 16px; }
+    .meeting-item.active { border-bottom-color: #C2410C; }
+    .sidebar-header { padding: 0 14px 14px; }
+    .main { padding: 28px 20px 60px; }
+    .doc-meta { flex-direction: column; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="client">山口 真導さん</div>
+        <div class="title">議事録アーカイブ</div>
+      </div>
+      <ul class="meeting-list" id="meetingList"></ul>
+    </nav>
+    <main class="main" id="main"></main>
+  </div>
+
+<script>
+const meetings = [
+  {
+    id: "2026-09-01",
+    date: "2026年9月1日",
+    weekday: "火",
+    subject: "3チャレローンチ 個別打ち合わせ",
+    name: "アカウンタックス 山口真導さん：片岡守 個別打ち合わせ",
+    time: "12:00〜12:49",
+    participants: "山口 真導 様、片岡 守（イレブンワン）",
+    decisions: [
+      {
+        title: "ローンチ全体の流れ（3週間広告 → オプトLP → オープンチャット → 3日間チャレンジ）",
+        body: [
+          "3週間広告を回してオプトLPに誘導し、サンクスページ経由でメールアドレスとLINEオープンチャットへの参加を促す導線で進める。",
+          "オープンチャットに入らない人向けに、オープンチャットへの参加を促すステップメールを5通ほど配信する。",
+          "オープンチャット上でDay1・Day2・Day3（例：月・水・金など1日おき）の3日間チャレンジを実施し、各日課題を出す。"
+        ],
+        why: null
+      },
+      {
+        title: "課題未提出者はドロップアウトさせる（第一回は税理士向けでも特別扱いしない）",
+        body: [
+          "通常のローンチと同様、課題を提出しない参加者は個別相談に進めずドロップアウトさせる方針とする。",
+          "税理士向けだからと基準を緩めることはせず、まずは通常の3チャレルールのまま実施する。"
+        ],
+        why: "山口さんの意見：情報だけ取りたい層への個別相談対応の負担や、真剣でない申込者が仮に契約しても後々クレームになりやすいことを懸念。ドロップアウトしても連絡先リストは残るため、次回以降のアプローチは可能。"
+      },
+      {
+        title: "1クールを3クール繰り返して1期分の生徒を集める運用",
+        body: [
+          "カチエル講座のような区切り型（木で区切る）方式を採用し、PLCのように常時プロモーションを回すエバーグリーン型は今回は採らない。",
+          "第一回は試験的な位置づけとして通常通り実施し、反応が悪ければ本講座開講前にもう1チャレンジ追加する想定。"
+        ],
+        why: null
+      },
+      {
+        title: "既存塾生への再案内（大幅割引）",
+        body: [
+          "リニューアルする新しい商品を、現在の塾生にも大幅割引で改めて案内する方針。"
+        ],
+        why: "現行の月額塾は価格が安いために本気度が低く、成果に繋がっていない・顧問先の解約防止目的の情報収集で塾に留まっている塾生が多いという課題感を山口さんが持っている。事業を伸ばすには新規顧客の獲得が本質的に必要という認識。"
+      },
+      {
+        title: "オプトLPの実績数値・書籍情報の扱い",
+        body: [
+          "LP上の実績数値（受講者数など）は現状と異なる可能性があるため、山口さんが最新の正確な数値をXmindファイルで共有し、片岡さんが反映する。",
+          "書籍の情報については、出版社に使用許諾済みであることを山口さんが確認済みのため、そのまま使用してよい。"
+        ],
+        why: null
+      },
+      {
+        title: "カチエル講座のお客様の声動画はLPに使用しない",
+        body: [
+          "カチエル社内にあったYouTube動画のお客様の声を片岡さんがLPに使用しようとしていたが、使用を取りやめる。",
+          "代わりに、現在の塾生に依頼して新しくお客様の声を撮影する。"
+        ],
+        why: "カチエル社の久保社長が著作権法違反を探して指摘し、損害賠償を求める動きをしていると山口さんから情報共有があったため、リスク回避のため使用しないことに決定。"
+      },
+      {
+        title: "リード獲得の運用（片岡さんのメルマガスタンドで一旦受け、山口さんに還元）",
+        body: [
+          "メールアドレスの収集は片岡さんのメルマガスタンドで受け、集まったリストを山口さんに提供する運用とする。"
+        ],
+        why: null
+      },
+      {
+        title: "広告運用は山口さんの既存代理店 or 田中さん系代理店のどちらでも可",
+        body: [
+          "現状、山口さんが既存の広告代理店（社長向け広告、Meta中心）に依頼している。LPが固まった段階で代理店との月1回の定例打ち合わせがあり、片岡さんも参加可能な回があれば同席する。",
+          "選択肢として、田中さんの弟子筋にあたる広告代理店（初期費用10万円＋広告費の20%運用手数料、クリエイティブ制作も対応）に依頼することも可能。どちらでも良いとのことで、片岡さんが詳細を確認の上、山口さんと擦り合わせる。",
+          "目標CPCの目安として、現状のMeta広告CPCが6,000円前後のところを、3,000〜5,000円程度に抑えたいという希望がある。広告費は山口さん負担。"
+        ],
+        why: null
+      },
+      {
+        title: "バックエンド商品の価格帯・KPIの考え方",
+        body: [
+          "着手金80万円を軸に、表向き100万円からスタートし、成果保証を組み込んで150万円程度に調整するようなイメージで検討中（未確定）。",
+          "マンツーマンで山口さんが対応するコースと、グループコンサル形式のコースなど、サポート内容によって複数段階の価格帯に分ける案も出ているが、詳細は未確定。",
+          "現行の月額塾は価格が安く本気度に課題があるため、新しい商品体系では価格を上げつつ、個別面談の回数を組み込むなど付加価値を強化する方向で検討する。"
+        ],
+        why: null
+      },
+      {
+        title: "フロントセミナーはライブ配信＋アーカイブ残し",
+        body: [
+          "3日間チャレンジは録画ではなくリアルタイムのライブで実施する。",
+          "アーカイブは残し、次のクールが始まる直前まで公開しておく（未視聴者の駆け込み視聴を狙う）。"
+        ],
+        why: null
+      },
+      {
+        title: "個別相談への導線（公式LINE＋Timerex）",
+        body: [
+          "オープンチャットは一対一のやり取りに向かないため、個別相談の日程調整専用に新しい公式LINEアカウントを作成する。",
+          "公式LINEからTimerex（タイムレックス）の予約リンクに誘導し、申込時に氏名と「個別相談希望」の入力を必須にすることで、誰が申し込んだか把握できるようにし、リマインド送付にも活用する。"
+        ],
+        why: null
+      },
+      {
+        title: "受講契約書・利用規約のたたき台",
+        body: [
+          "受講契約書・利用規約は、矢部さんが持っているサンプルと、片岡さんが別案件で使っているAI講座の資料を参考にたたき台を作成する。"
+        ],
+        why: null
+      },
+      {
+        title: "オプトイン特典はまず「なし」でスタート",
+        body: [
+          "登録時点の特典は設定せず、まずは特典なしでオプトインの反応を見る。反応が悪ければ、後から大型特典（十大特典的なもの）の追加を検討する。",
+          "3日間の課題をすべて提出した人向けの特典として「セカンドオピニオン契約書のひな形」を進呈することが決定。過去にカチエル講座でも配布実績があるもの。",
+          "「よくある反論集」も特典候補として山口さんが前向きだが、新規に作成が必要なため未確定。"
+        ],
+        why: null
+      }
+    ],
+    actions: [
+      { no: 1, task: "Day2・Day3のシナリオ作成", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 2, task: "LPの実績数値をmamoruさん確認の最新数値に修正", owner: "片岡さん", deadline: "未定", note: "山口さんからXmind共有後に反映" },
+      { no: 3, task: "実績数値・年数など最新情報をXmindファイルで共有", owner: "山口さん", deadline: "未定", note: "" },
+      { no: 4, task: "カチエル動画のお客様の声をLPから削除・不使用の徹底", owner: "片岡さん", deadline: "未定", note: "完了扱い（この打ち合わせで決定・反映済み）" },
+      { no: 5, task: "塾生に依頼して新しいお客様の声を撮影", owner: "山口さん", deadline: "未定", note: "" },
+      { no: 6, task: "企画説明動画（3〜10分程度）のシナリオ作成", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 7, task: "企画説明動画の撮影", owner: "山口さん", deadline: "未定", note: "片岡さん作成のシナリオを使用" },
+      { no: 8, task: "広告代理店（既存 or 田中さん系）どちらに依頼するか検討・回答", owner: "山口さん", deadline: "未定", note: "" },
+      { no: 9, task: "田中さん系広告代理店の詳細確認・山口さんへ共有", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 10, task: "広告代理店との月次定例の日程共有", owner: "山口さん", deadline: "未定", note: "片岡さん参加可能な回に招待" },
+      { no: 11, task: "カチエル講座で使用中のスライド資料一式を提供", owner: "山口さん", deadline: "未定", note: "" },
+      { no: 12, task: "個別相談用ヒアリングフォームの用意", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 13, task: "個別相談用セールス資料の用意", owner: "山口さん", deadline: "未定", note: "" },
+      { no: 14, task: "受講契約書・利用規約のたたき台作成", owner: "片岡さん", deadline: "未定", note: "矢部さん資料・AI講座資料を参考" },
+      { no: 15, task: "個別相談導線用の公式LINEアカウント新規作成・Timerex連携", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 16, task: "特典「セカンドオピニオン契約書ひな形」の用意・LP反映", owner: "片岡さん", deadline: "未定", note: "" },
+      { no: 17, task: "未確認事項をまとめたドキュメントを送付", owner: "片岡さん", deadline: "未定", note: "チャットで送付予定" },
+      { no: 18, task: "片岡さんから届く確認事項への回答", owner: "山口さん", deadline: "未定", note: "" }
+    ]
+  }
+];
+
+const listEl = document.getElementById('meetingList');
+const mainEl = document.getElementById('main');
+
+function ownerClass(owner) {
+  return owner === "山口さん" ? "owner-piyo" : "owner-kataoka";
+}
+
+function renderMeeting(m) {
+  const decisionsHtml = m.decisions.map(d => `
+    <div class="decision-card">
+      <h3>${d.title}</h3>
+      ${d.body.map(p => `<p>${p}</p>`).join('')}
+      ${d.why ? `<div class="why"><b>背景：</b>${d.why}</div>` : ''}
+    </div>
+  `).join('');
+
+  const actionsHtml = `
+    <table class="actions">
+      <thead>
+        <tr>
+          <th class="col-no">No.</th>
+          <th>タスク内容</th>
+          <th class="col-owner">担当者</th>
+          <th class="col-deadline">期限</th>
+          <th>補足</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${m.actions.map(a => `
+          <tr>
+            <td class="col-no">${a.no}</td>
+            <td>${a.task}</td>
+            <td class="col-owner"><span class="${ownerClass(a.owner)}">${a.owner}</span></td>
+            <td class="col-deadline">${a.deadline}</td>
+            <td>${a.note}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  mainEl.innerHTML = `
+    <div class="doc-header">
+      <div class="meeting-name">${m.name}</div>
+      <dl class="doc-meta">
+        <div><dt>日時</dt><dd>${m.date}（${m.weekday}）${m.time}</dd></div>
+        <div><dt>参加者</dt><dd>${m.participants}</dd></div>
+      </dl>
+    </div>
+    <div class="section-title">意思決定したこととその背景</div>
+    ${decisionsHtml}
+    <div class="section-title">アクションプラン</div>
+    ${actionsHtml}
+  `;
+}
+
+function renderList() {
+  listEl.innerHTML = meetings.map((m, i) => `
+    <li class="meeting-item${i === 0 ? ' active' : ''}" data-id="${m.id}">
+      <div class="date">${m.date}</div>
+      <div class="subject">${m.subject}</div>
+    </li>
+  `).join('');
+
+  listEl.querySelectorAll('.meeting-item').forEach(item => {
+    item.addEventListener('click', () => {
+      listEl.querySelectorAll('.meeting-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      const m = meetings.find(mm => mm.id === item.dataset.id);
+      renderMeeting(m);
+      history.replaceState(null, '', '#' + m.id);
+    });
+  });
+}
+
+function init() {
+  renderList();
+  const hashId = location.hash.replace('#', '');
+  const initial = meetings.find(m => m.id === hashId) || meetings[0];
+  const idx = meetings.indexOf(initial);
+  if (listEl.children[idx]) {
+    listEl.querySelectorAll('.meeting-item').forEach(el => el.classList.remove('active'));
+    listEl.children[idx].classList.add('active');
+  }
+  renderMeeting(initial);
+}
+
+init();
+</script>
+</body>
+</html>
